@@ -46,6 +46,7 @@
     "@bigtest/globals": "^0.6.0",
     "@bigtest/interactor": "^0.14.0",
     "@effection/events": "^0.7.4",
+    "@effection/subscription": "^0.9.0",
     "bowser": "^2.9.0",
     "effection": "^0.7.0"
   },

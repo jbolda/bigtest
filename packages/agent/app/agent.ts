@@ -10,8 +10,6 @@ import { loadManifest } from './manifest';
 export function* createAgent(queryParams: QueryParams) {
   console.log('[agent] connecting to', queryParams.connectTo);
 
-  let testFrame = yield TestFrame.start();
-
   let createSocket = () => new WebSocket(queryParams.connectTo);
   let agent: Agent = yield Agent.start({
     createSocket,
@@ -23,7 +21,7 @@ export function* createAgent(queryParams: QueryParams) {
     console.log('[agent] received command', command);
 
     if (command.type === "run") {
-      yield run(agent, testFrame, command);
+      yield run(agent, command);
     }
   });
 
@@ -41,7 +39,7 @@ function* lanePaths(test: TestImplementation, prefix: string[] = []): Generator<
   }
 }
 
-function* run(agent: Agent, testFrame: TestFrame, command: Run) {
+function* run(agent: Agent, command: Run) {
   let { appUrl, manifestUrl, testRunId } = command;
 
   console.log('[agent] loading test manifest via', manifestUrl);
@@ -55,7 +53,7 @@ function* run(agent: Agent, testFrame: TestFrame, command: Run) {
       console.log('[agent] running lane', lanePath);
 
       bigtestGlobals.appUrl = appUrl;
-      yield testFrame.clear();
+      yield TestFrame.clear();
       yield runLane(testRunId, agent, test, lanePath);
       console.log('[agent] lane completed', lanePath);
     }

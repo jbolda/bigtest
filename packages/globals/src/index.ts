@@ -1,11 +1,15 @@
 import './globals';
 import { TestImplementation } from '@bigtest/suite';
 
+export type RunnerState = 'idle' | 'waiting' | 'step' | 'assertion';
+
 interface BigtestOptions {
   testFrame?: HTMLIFrameElement;
   document?: Document;
   defaultInteractorTimeout?: number;
   appUrl?: string;
+  runnerState?: RunnerState;
+  runnerPath?: string[];
 }
 
 const defaultManifest: TestImplementation = {
@@ -66,6 +70,22 @@ export const bigtestGlobals = {
 
   set appUrl(value: string | undefined) {
     options().appUrl = value;
+  },
+
+  get runnerState(): RunnerState {
+    return options().runnerState || 'idle';
+  },
+
+  set runnerState(value: RunnerState) {
+    options().runnerState = value;
+  },
+
+  get runnerPath(): string[] | undefined {
+    return options().runnerPath;
+  },
+
+  set runnerPath(value: string[] | undefined) {
+    options().runnerPath = value;
   },
 
   reset() {

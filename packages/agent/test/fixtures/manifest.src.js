@@ -17,8 +17,21 @@ module.exports = test("tests")
   .step("load the app", async () => { await App.visit('/test/fixtures/app.html') })
   .child(
     "test with failing assertion", test => test
-      .step("successful step", async () => {})
-      .assertion("failing assertion", async () => { throw new Error("boom!"); })
+      .step("successful step", async () => {
+        console.log('this is a good step')
+
+        // during this step we're throwing an uncaught error, it won't affect
+        // the result of this step, but should be caught and forwarded to the
+        // agent.
+        setTimeout(() => {
+          throw new Error('uncaught error');
+        }, 5);
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      })
+      .assertion("failing assertion", async () => {
+        console.error('I am going to fail');
+        throw new Error("boom!");
+      })
       .assertion("successful assertion", async () => true))
   .child(
     "tests that track context", test => test

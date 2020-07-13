@@ -1,5 +1,6 @@
 import { Operation, resource } from 'effection';
 import { Mailbox, subscribe } from '@bigtest/effection';
+import { ParentMessage, ChildMessage } from './harness-protocol';
 
 export class ParentFrame {
   static *start(): Operation<ParentFrame> {
@@ -10,12 +11,12 @@ export class ParentFrame {
 
   constructor(private mailbox: Mailbox) {}
 
-  send(message: unknown) {
+  static send(message: ParentMessage) {
     window.parent.postMessage(JSON.stringify(message), "*");
   }
 
-  *receive(): Operation {
+  *receive(): Operation<ChildMessage> {
     let { args: [message] } = yield this.mailbox.receive({ event: 'message' });
-    return message.data;
+    return message.data as ChildMessage;
   }
 }

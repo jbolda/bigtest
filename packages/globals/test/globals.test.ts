@@ -90,4 +90,26 @@ describe('@bigtest/globals', () => {
       expect(bigtestGlobals.testFrame).toEqual(frameElement);
     });
   });
+
+  describe('runnerState', () => {
+    it('returns `idle` by default', () => {
+      expect(bigtestGlobals.runnerState).toEqual('idle');
+    });
+
+    it('can assign a number', () => {
+      bigtestGlobals.runnerState = 'waiting';
+      expect(bigtestGlobals.runnerState).toEqual('waiting');
+    });
+  });
+
+  describe('runnerPath', () => {
+    it('returns undefined by default', () => {
+      expect(bigtestGlobals.runnerPath).toEqual(undefined);
+    });
+
+    it('can assign a number', () => {
+      bigtestGlobals.runnerPath = ['foo', 'bar']
+      expect(bigtestGlobals.runnerPath).toEqual(['foo', 'bar']);
+    });
+  });
 })
