@@ -26,6 +26,7 @@ export function *loadConfigFile(configFilePath: string): Operation<ProjectOption
 
 export type ProjectOptions = {
   port: number;
+  showTree: boolean;
   testFiles: string[];
   cacheDir: string;
   app: {
@@ -51,6 +52,7 @@ export type ProjectOptions = {
 export function defaultConfig(configFilePath: string): ProjectOptions {
   return {
     port: 24002,
+    showTree: false,
     app: {
       command: "yarn start",
       args: [],
