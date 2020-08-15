@@ -51,6 +51,10 @@ function parseOptions(config: ProjectOptions, argv: readonly string[]): Command 
       choices: ['debug', 'info', 'warn', 'error'],
       desc: 'increase or decrease the amount of logging information printed to the console'
     })
+    .option('show-tree', {
+      type: 'boolean',
+      description: 'Show the full test tree'
+    })
     .command('server', 'start a bigtest server', startOptions)
     .command('test', 'run tests against server')
     .command('ci', 'start a server and run the test suite', startOptions)
@@ -63,6 +67,11 @@ function parseOptions(config: ProjectOptions, argv: readonly string[]): Command 
   if(rawOptions['launch']) {
     config.launch = rawOptions['launch'];
   }
+
+  if(rawOptions['show-tree']) {
+    config.showTree = true;
+  }
+
   if(rawOptions['testFiles']) {
     config.testFiles = rawOptions['testFiles'] as string[];
   }

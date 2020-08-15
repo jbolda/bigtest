@@ -34,7 +34,7 @@ export function* runTest(config: ProjectOptions, formatter: StreamingFormatter):
       if(result.event.type === 'assertion:result' && status && status !== 'pending' && status !== 'running') {
         assertionCounts[status] += 1;
       }
-      formatter.event(result.event);
+      formatter.event(result.event, config);
     }
   }
 
