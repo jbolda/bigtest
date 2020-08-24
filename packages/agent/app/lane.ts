@@ -1,8 +1,11 @@
 import { timebox } from './timebox';
-
 import { Agent } from '../shared/agent';
 import { TestImplementation, ErrorDetails, Context as TestContext } from '@bigtest/suite';
 import { Operation, fork } from 'effection';
+import { bigtestGlobals } from '@bigtest/globals';
+
+const stepTimeoutCoefficient = 5;
+const stepTimeout = stepTimeoutCoefficient * bigtestGlobals.defaultInteractorTimeout;
 
 const serializeError: (error: ErrorDetails) => ErrorDetails = ({ message, fileName, lineNumber, columnNumber, stack }) => ({
   message,
@@ -28,7 +31,7 @@ function *runLaneSegment(testRunId: string, agent: Agent, test: TestImplementati
       console.debug('[agent] running step', step);
       agent.send({ testRunId, type: 'step:running', path: stepPath });
 
-      let result: TestContext | void = yield timebox(step.action(context), 2000)
+      let result: TestContext | void = yield timebox(step.action(context), stepTimeout)
 
       if (result != null) {
         context = {...context, ...result};
@@ -66,7 +69,7 @@ function *runLaneSegment(testRunId: string, agent: Agent, test: TestImplementati
           console.debug('[agent] running assertion', assertion);
           agent.send({ testRunId, type: 'assertion:running', path: assertionPath });
 
-          yield timebox(assertion.check(context), 2000)
+          yield timebox(assertion.check(context), stepTimeout)
 
           agent.send({ testRunId, type: 'assertion:result', status: 'ok', path: assertionPath });
         } catch(error) {
