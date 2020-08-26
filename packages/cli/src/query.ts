@@ -24,6 +24,7 @@ export function run() {
 export type RunResultEvent = {
   type: string;
   agentId: string;
+  description: string;
   testRunId: string;
   status?: ResultStatus;
   path?: string[];
