@@ -120,55 +120,55 @@ describe('orchestrator', () => {
     });
   });
 
-  describe('an externally managed application', () => {
-    let port: number;
+  // describe('an externally managed application', () => {
+  //   let port: number;
 
-    beforeEach(async function() {
-      port = await getPort();
+  //   beforeEach(async function() {
+  //     port = await getPort();
 
-      actions.updateApp({ url: `http://localhost:${port}` });
+  //     actions.updateApp({ url: `http://localhost:${port}` });
 
-      await actions.fork(
-        actions.atom.slice('appService', 'appStatus').once(status => {
-          return ['unstarted', 'unreachable'].includes(status);
-        })
-      );
+  //     await actions.fork(
+  //       actions.atom.slice('appService', 'appStatus').once(status => {
+  //         return ['unstarted', 'unreachable'].includes(status);
+  //       })
+  //     );
 
-      await actions.fork(function * () {
-        return yield ChildProcess.spawn(`yarn test:app:start ${port}`, [], {
-          shell: true,
-        });
-      });
+  //     await actions.fork(function * () {
+  //       return yield ChildProcess.spawn(`yarn test:app:start ${port}`, [], {
+  //         shell: true,
+  //       });
+  //     });
 
-      await actions.fork(
-        actions.atom.slice('appService', 'appStatus').once(status => {
-          return status === 'reachable'
-        })
-      );
-    });
+  //     await actions.fork(
+  //       actions.atom.slice('appService', 'appStatus').once(status => {
+  //         return status === 'reachable'
+  //       })
+  //     );
+  //   });
 
-    describe('retrieving app', () => {
-      let response: Response;
+  //   describe('retrieving app', () => {
+  //     let response: Response;
 
-      beforeEach(async () => {
-        response = await actions.fetch(`http://localhost:${port}/`);
-      });
+  //     beforeEach(async () => {
+  //       response = await actions.fetch(`http://localhost:${port}/`);
+  //     });
 
-      it('responds successfully', () => {
-        expect(response.ok).toEqual(true);
-      });
-    });
+  //     it('responds successfully', () => {
+  //       expect(response.ok).toEqual(true);
+  //     });
+  //   });
 
-    describe('retrieving app via proxy', () => {
-      let response: Response;
+  //   describe('retrieving app via proxy', () => {
+  //     let response: Response;
 
-      beforeEach(async () => {
-        response = await actions.fetch('http://localhost:24101/');
-      });
+  //     beforeEach(async () => {
+  //       response = await actions.fetch('http://localhost:24101/');
+  //     });
 
-      it('responds successfully', () => {
-        expect(response.status).toEqual(200);
-      });
-    });
-  });
+  //     it('responds successfully', () => {
+  //       expect(response.status).toEqual(200);
+  //     });
+  //   });
+  // });
 });

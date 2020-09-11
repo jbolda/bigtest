@@ -8,50 +8,50 @@ import { spawn } from './helpers';
 import { Local, WebDriver } from '../src/index';
 import { findAvailablePortNumber } from '../src/find-available-port-number';
 
-describe("Running a local wedriver", () => {
-  let driver: WebDriver;
-  let server = express();
-  let latestRequest: Request;
-  server.raw.use(function(request: Request, response: Response) {
-    latestRequest = request;
-    response.write("thank you");
-    response.end();
-  });
+// describe("Running a local wedriver", () => {
+//   let driver: WebDriver;
+//   let server = express();
+//   let latestRequest: Request;
+//   server.raw.use(function(request: Request, response: Response) {
+//     latestRequest = request;
+//     response.write("thank you");
+//     response.end();
+//   });
 
-  let serverURL: string;
+//   let serverURL: string;
 
-  beforeEach(async () => {
-    latestRequest = undefined;
+//   beforeEach(async () => {
+//     latestRequest = undefined;
 
-    let port = await spawn(findAvailablePortNumber());
+//     let port = await spawn(findAvailablePortNumber());
 
-    serverURL = `http://localhost:${port}`;
+//     serverURL = `http://localhost:${port}`;
 
-    await spawn(server.listen(port));
+//     await spawn(server.listen(port));
 
-  });
+//   });
 
-  describe('with chromedriver', () => {
-    beforeEach(async () => {
-      driver = await spawn(Local({ browserName: 'chrome', headless: true }));
-      await spawn(driver.navigateTo(serverURL));
-    });
+//   describe('with chromedriver', () => {
+//     beforeEach(async () => {
+//       driver = await spawn(Local({ browserName: 'chrome', headless: true }));
+//       await spawn(driver.navigateTo(serverURL));
+//     });
 
-    it('can navigate to a url', () => {
-      expect(latestRequest).toBeDefined();
-      expect(latestRequest.headers['user-agent']).toMatch('Chrome');
-    });
-  });
+//     it('can navigate to a url', () => {
+//       expect(latestRequest).toBeDefined();
+//       expect(latestRequest.headers['user-agent']).toMatch('Chrome');
+//     });
+//   });
 
-  describe('with geckodriver', () => {
-    beforeEach(async () => {
-      driver = await spawn(Local({ browserName: 'firefox', headless: true }));
-      await spawn(driver.navigateTo(serverURL));
-    });
+//   describe('with geckodriver', () => {
+//     beforeEach(async () => {
+//       driver = await spawn(Local({ browserName: 'firefox', headless: true }));
+//       await spawn(driver.navigateTo(serverURL));
+//     });
 
-    it('can navigate to a url', () => {
-      expect(latestRequest).toBeDefined();
-      expect(latestRequest.headers['user-agent']).toMatch('Firefox');
-    });
-  });
-})
+//     it('can navigate to a url', () => {
+//       expect(latestRequest).toBeDefined();
+//       expect(latestRequest.headers['user-agent']).toMatch('Firefox');
+//     });
+//   });
+// })

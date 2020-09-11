@@ -60,21 +60,21 @@ describe('result stream', () => {
   });
 
   describe('steps', () => {
-    describe('marking a step as running', () => {
-      beforeEach(() => {
-        slice.slice('agents', 'agent-1', 'result', 'steps', 0, 'status').set('running');
-      });
+    // describe('marking a step as running', () => {
+    //   beforeEach(() => {
+    //     slice.slice('agents', 'agent-1', 'result', 'steps', 0, 'status').set('running');
+    //   });
 
-      it('generates a test event', async () => {
-        let { value } = await actions.fork(subscription.next());
-        expect(value).toEqual({
-          type: 'step:running',
-          agentId: 'agent-1',
-          testRunId: 'test-run-1',
-          path: ['some test', 'step one'],
-        });
-      });
-    });
+    //   it('generates a test event', async () => {
+    //     let { value } = await actions.fork(subscription.next());
+    //     expect(value).toEqual({
+    //       type: 'step:running',
+    //       agentId: 'agent-1',
+    //       testRunId: 'test-run-1',
+    //       path: ['some test', 'step one'],
+    //     });
+    //   });
+    // });
 
     describe('marking a step as ok', () => {
       beforeEach(() => {
