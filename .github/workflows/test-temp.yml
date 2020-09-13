@@ -8,6 +8,7 @@ on:
 jobs:
   prepack:
     runs-on: ${{ matrix.platform }}
+    timeout-minutes: 30
     name: prepack
     strategy:
       matrix:
@@ -31,6 +32,7 @@ jobs:
 
   test:
     runs-on: ${{ matrix.platform }}
+    timeout-minutes: 30
     name: ${{ matrix.package }}
     needs: prepack
     strategy:
