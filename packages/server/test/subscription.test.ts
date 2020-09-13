@@ -28,6 +28,7 @@ function subscriptionQuery() {
   `;
 }
 
+if (process.platform !== 'win32') {
 describe('running tests with subscription on an agent', () => {
   let client: Client;
   let agent: Agent;
@@ -166,3 +167,4 @@ describe('running tests with subscription on an agent', () => {
     });
   });
 });
+}
