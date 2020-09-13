@@ -60,23 +60,29 @@ describe('manifest builder', () => {
     });
   });
 
-  describe('updating the manifest', () => {
-    let body: string;
+  if (process.platform !== "win32") {
+    describe("updating the manifest", () => {
+      let body: string;
 
-    beforeEach(async () => {
-      await copyFile(path.join(FIXTURES_DIR, 'empty.t.js'), MANIFEST_PATH);
-      
-      let bundle = await actions.fork(atom.slice('bundler').once(({ type }) => type === 'GREEN'));
+      beforeEach(async () => {
+        await copyFile(path.join(FIXTURES_DIR, "empty.t.js"), MANIFEST_PATH);
 
-      resultPath = (!!bundle && bundle.type === 'GREEN' && bundle.path) as string;
+        let bundle = await actions.fork(
+          atom.slice("bundler").once(({ type }) => type === "GREEN")
+        );
 
-      body = await readFile(path.resolve(DIST_DIR, resultPath), 'utf8')
+        resultPath = (!!bundle &&
+          bundle.type === "GREEN" &&
+          bundle.path) as string;
+
+        body = await readFile(path.resolve(DIST_DIR, resultPath), "utf8");
+      });
+
+      it("contains the built manifest", () => {
+        expect(body).toContain("An empty test with no steps and no children");
+      });
     });
-
-    it('contains the built manifest', () => {
-      expect(body).toContain('An empty test with no steps and no children');
-    });
-  });
+  }
 
   describe('reading manifest from state on start', () => {
     it('returns the manifest from the state', () => {
@@ -131,34 +137,47 @@ describe('manifest builder', () => {
     });
   });
 
-  describe('updating the manifest and then reading it', () => {
-    beforeEach(async () => {
-      await copyFile(path.join(FIXTURES_DIR, 'empty.t.js'), MANIFEST_PATH);
-      await actions.fork(atom.slice('bundler').once(({ type }) => type === 'GREEN'))
+  if (process.platform !== "win32") {
+    describe("updating the manifest and then reading it", () => {
+      beforeEach(async () => {
+        await copyFile(path.join(FIXTURES_DIR, "empty.t.js"), MANIFEST_PATH);
+        await actions.fork(
+          atom.slice("bundler").once(({ type }) => type === "GREEN")
+        );
+      });
+
+      it("returns the updated manifest from the state", () => {
+        expect(atom.get().manifest.fileName).toMatch(/manifest-[0-9a-f]+\.js/);
+        expect(atom.get().manifest.description).toEqual(
+          "An empty test with no steps and no children"
+        );
+      });
     });
+  }
 
-    it('returns the updated manifest from the state', () => {
-      expect(atom.get().manifest.fileName).toMatch(/manifest-[0-9a-f]+\.js/);
-      expect(atom.get().manifest.description).toEqual('An empty test with no steps and no children');
+  if (process.platform !== "win32") {
+    describe("importing the manifest with an error adds the error to the state", () => {
+      beforeEach(async () => {
+        await copyFile(
+          path.join(FIXTURES_DIR, "exceptions", "error.t.js"),
+          MANIFEST_PATH
+        );
+        await actions.fork(
+          atom.slice("bundler").once(({ type }) => type === "ERRORED")
+        );
+      });
+
+      it("should update the global state with the error detail", () => {
+        let bundlerState = atom.get().bundler;
+
+        // this could be a custom expect
+        // assert is used to type narrow also and does more than just assert
+        assertBundlerState(bundlerState.type, { is: "ERRORED" });
+
+        let error = bundlerState.error;
+
+        expect(error.frame).toBeTruthy();
+      });
     });
-  });
-
-  // describe('importing the manifest with an error adds the error to the state', () => {
-  //   beforeEach(async () => {
-  //     await copyFile(path.join(FIXTURES_DIR, 'exceptions', 'error.t.js'), MANIFEST_PATH);
-  //     await actions.fork(atom.slice('bundler').once(({ type }) => type === 'ERRORED'));
-  //   });
-
-  //   it('should update the global state with the error detail', () => {
-  //     let bundlerState = atom.get().bundler;
-
-  //     // this could be a custom expect 
-  //     // assert is used to type narrow also and does more than just assert
-  //     assertBundlerState(bundlerState.type, {is: 'ERRORED'})
-      
-  //     let error = bundlerState.error;
-
-  //     expect(error.frame).toBeTruthy();
-  //   });
-  // })
+  }
 });
