@@ -12,7 +12,6 @@ import { TestEvent } from '../src/schema/test-event';
 
 import { actions } from './helpers';
 
-if (process.platform !== 'win32') {
 describe('result stream', () => {
   let atom: Atom<OrchestratorState>;
   let slice: Slice<TestRunState, OrchestratorState>;
@@ -61,26 +60,24 @@ describe('result stream', () => {
   });
 
   describe('steps', () => {
-      
-    if (process.platform !== "win32") {
-      describe("marking a step as running", () => {
-        beforeEach(() => {
-          slice
-            .slice("agents", "agent-1", "result", "steps", 0, "status")
-            .set("running");
-        });
 
-        it("generates a test event", async () => {
-          let { value } = await actions.fork(subscription.next());
-          expect(value).toEqual({
-            type: "step:running",
-            agentId: "agent-1",
-            testRunId: "test-run-1",
-            path: ["some test", "step one"],
-          });
+    describe("marking a step as running", () => {
+      beforeEach(() => {
+        slice
+          .slice("agents", "agent-1", "result", "steps", 0, "status")
+          .set("running");
+      });
+
+      it("generates a test event", async () => {
+        let { value } = await actions.fork(subscription.next());
+        expect(value).toEqual({
+          type: "step:running",
+          agentId: "agent-1",
+          testRunId: "test-run-1",
+          path: ["some test", "step one"],
         });
       });
-    }
+    });
 
     describe('marking a step as ok', () => {
       beforeEach(() => {
@@ -373,4 +370,3 @@ describe('result stream', () => {
     });
   });
 });
-}

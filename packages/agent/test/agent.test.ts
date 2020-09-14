@@ -16,7 +16,6 @@ import { run } from './helpers';
 import { StepResult } from '@bigtest/suite';
 
 
-if (process.platform !== 'win32') {
 function* staticServer(port: number) {
   let app = express();
   return yield readyResource(app, function*(ready) {
@@ -177,9 +176,17 @@ describe("@bigtest/agent", function() {
 
         it('sends a disconnect message', () => {
           expect(closed).toEqual(true);
+          // @ts-ignore
+          process._getActiveHandles().forEach((handle) => {
+            try {
+            handle.stdout.end()
+            handle.stderr.end()
+            } catch (e) {
+              // no-op
+            }
+          });
         });
       });
     });
   });
 });
-}

@@ -8,8 +8,6 @@ import { spawn } from './helpers';
 import { Local, WebDriver } from '../src/index';
 import { findAvailablePortNumber } from '../src/find-available-port-number';
 
-
-if (process.platform !== 'win32') {
 describe("Running a local wedriver", () => {
   let driver: WebDriver;
   let server = express();
@@ -57,4 +55,3 @@ describe("Running a local wedriver", () => {
     });
   });
 })
-}

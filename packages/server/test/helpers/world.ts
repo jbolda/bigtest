@@ -10,6 +10,15 @@ export class World {
 
   destroy() {
     this.execution.halt();
+    // @ts-ignore
+    process._getActiveHandles().forEach((handle) => {
+      try {
+      handle.stdout.end()
+      handle.stderr.end()
+      } catch (e) {
+        // no-op
+      }
+    });
   }
 
   ensure(hook: () => void) {

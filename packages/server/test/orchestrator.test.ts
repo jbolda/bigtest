@@ -6,7 +6,6 @@ import { Response } from 'node-fetch';
 
 import { actions } from './helpers';
 
-if (process.platform !== 'win32') {
 describe('orchestrator', () => {
   beforeEach(async function() {
     this.timeout(20000);
@@ -121,8 +120,6 @@ describe('orchestrator', () => {
     });
   });
 
-  
-  if (process.platform !== 'win32') {
   describe('an externally managed application', () => {
     let port: number;
 
@@ -174,6 +171,4 @@ describe('orchestrator', () => {
       });
     });
   });
-  }
 });
-}
