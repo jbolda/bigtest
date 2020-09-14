@@ -70,11 +70,11 @@ describe('result stream', () => {
 
       it("generates a test event", async () => {
         let { value } = await actions.fork(subscription.next());
-        expect(value).toEqual({
-          type: "step:running",
-          agentId: "agent-1",
-          testRunId: "test-run-1",
-          path: ["some test", "step one"],
+        expect(value).toMatchObject({
+          type: 'step:running',
+          agentId: 'agent-1',
+          testRunId: 'test-run-1',
+          path: ['some test', 'step one'],
         });
       });
     });
@@ -86,7 +86,7 @@ describe('result stream', () => {
 
       it('generates a test event', async () => {
         let { value } = await actions.fork(subscription.next());
-        expect(value).toEqual({
+        expect(value).toMatchObject({
           type: 'step:result',
           status: 'ok',
           agentId: 'agent-1',
@@ -108,7 +108,7 @@ describe('result stream', () => {
 
       it('generates a test event', async () => {
         let { value } = await actions.fork(subscription.next());
-        expect(value).toEqual({
+        expect(value).toMatchObject({
           type: 'step:result',
           status: 'failed',
           agentId: 'agent-1',
@@ -129,7 +129,7 @@ describe('result stream', () => {
 
       it('generates a test event', async () => {
         let { value } = await actions.fork(subscription.next());
-        expect(value).toEqual({
+        expect(value).toMatchObject({
           type: 'assertion:running',
           agentId: 'agent-1',
           testRunId: 'test-run-1',
@@ -145,7 +145,7 @@ describe('result stream', () => {
 
       it('generates a test event', async () => {
         let { value } = await actions.fork(subscription.next());
-        expect(value).toEqual({
+        expect(value).toMatchObject({
           type: 'assertion:result',
           status: 'ok',
           agentId: 'agent-1',
@@ -167,7 +167,7 @@ describe('result stream', () => {
 
       it('generates a test event', async () => {
         let { value } = await actions.fork(subscription.next());
-        expect(value).toEqual({
+        expect(value).toMatchObject({
           type: 'assertion:result',
           status: 'failed',
           agentId: 'agent-1',
@@ -188,7 +188,7 @@ describe('result stream', () => {
 
       it('generates a test event', async () => {
         let { value } = await actions.fork(subscription.next());
-        expect(value).toEqual({
+        expect(value).toMatchObject({
           type: 'test:running',
           agentId: 'agent-1',
           testRunId: 'test-run-1',
@@ -204,7 +204,7 @@ describe('result stream', () => {
 
       it('generates a test event', async () => {
         let { value } = await actions.fork(subscription.next());
-        expect(value).toEqual({
+        expect(value).toMatchObject({
           type: 'test:result',
           status: 'ok',
           agentId: 'agent-1',
@@ -226,7 +226,7 @@ describe('result stream', () => {
 
       it('generates a test event', async () => {
         let { value } = await actions.fork(subscription.next());
-        expect(value).toEqual({
+        expect(value).toMatchObject({
           type: 'test:result',
           status: 'failed',
           agentId: 'agent-1',
@@ -247,7 +247,7 @@ describe('result stream', () => {
 
       it('generates a test event', async () => {
         let { value } = await actions.fork(subscription.next());
-        expect(value).toEqual({
+        expect(value).toMatchObject({
           type: 'testRunAgent:running',
           agentId: 'agent-1',
           testRunId: 'test-run-1'
@@ -262,7 +262,7 @@ describe('result stream', () => {
 
       it('generates a test event', async () => {
         let { value } = await actions.fork(subscription.next());
-        expect(value).toEqual({
+        expect(value).toMatchObject({
           type: 'testRunAgent:result',
           status: 'ok',
           agentId: 'agent-1',
@@ -283,7 +283,7 @@ describe('result stream', () => {
 
       it('generates a test event', async () => {
         let { value } = await actions.fork(subscription.next());
-        expect(value).toEqual({
+        expect(value).toMatchObject({
           type: 'testRunAgent:result',
           status: 'failed',
           agentId: 'agent-1',
@@ -303,7 +303,7 @@ describe('result stream', () => {
 
       it('generates a test event', async () => {
         let { value } = await actions.fork(subscription.next());
-        expect(value).toEqual({
+        expect(value).toMatchObject({
           type: 'testRun:running',
           testRunId: 'test-run-1'
         });
@@ -317,7 +317,7 @@ describe('result stream', () => {
 
       it('generates a test event', async () => {
         let { value } = await actions.fork(subscription.next());
-        expect(value).toEqual({
+        expect(value).toMatchObject({
           type: 'testRun:result',
           status: 'ok',
           testRunId: 'test-run-1'
@@ -337,7 +337,7 @@ describe('result stream', () => {
 
       it('generates a test event', async () => {
         let { value } = await actions.fork(subscription.next());
-        expect(value).toEqual({
+        expect(value).toMatchObject({
           type: 'testRun:result',
           status: 'failed',
           testRunId: 'test-run-1',

@@ -1,6 +1,6 @@
 {
   "name": "@bigtest/agent",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Agent for connecting test environments (browsers) to BigTest",
   "main": "dist/src/index.js",
   "typings": "dist/src/index.d.ts",
@@ -12,21 +12,21 @@
     "README.md"
   ],
   "scripts": {
-    "lint": "eslint '{app,bin,src,test}/**/*.ts'",
+    "lint": "eslint \"{app,bin,src,test}/**/*.ts\"",
     "test": "mocha -r ts-node/register test/**/*.test.ts",
     "mocha": "mocha -r ts-node/register",
     "start": "parcel serve --out-dir dist/app app/index.html app/harness.ts",
     "prepack:app": "parcel build --public-url ./ --no-minify --out-dir dist/app app/index.html app/test-frame.html app/harness.ts",
-    "prepack:tsc": "tsc --outdir dist --declaration --sourcemap",
+    "prepack:tsc": "tsc --project tsconfig.dist.json --outdir dist --declaration --sourcemap",
     "prepack": "yarn prepack:app && yarn prepack:tsc",
     "pretest:manifest": "parcel build test/fixtures/manifest.js test/fixtures/app.html --out-dir tmp/test --no-minify --global __bigtestManifest",
     "pretest:app": "parcel build --public-url ./ --no-minify --out-dir tmp/test app/index.html app/test-frame.html app/harness.ts",
     "pretest": "yarn pretest:manifest && yarn pretest:app"
   },
   "devDependencies": {
-    "@bigtest/interactor": "^0.16.0",
+    "@bigtest/interactor": "^0.16.1",
     "@bigtest/parcel": "^0.5.2",
-    "@bigtest/suite": "^0.7.0",
+    "@bigtest/suite": "^0.8.0",
     "@bigtest/webdriver": "^0.6.1",
     "@frontside/eslint-config": "^1.1.2",
     "@frontside/typescript": "^1.0.1",
@@ -42,13 +42,15 @@
     "node-fetch": "^2.6.0",
     "parcel": "^1.12.4",
     "parcel-bundler": "^1.12.4",
+    "regenerator-runtime": "^0.13.7",
     "ts-node": "*"
   },
   "dependencies": {
     "@bigtest/effection": "^0.5.4",
     "@bigtest/effection-express": "^0.8.0",
-    "@bigtest/globals": "^0.6.2",
+    "@bigtest/globals": "^0.6.3",
     "@effection/events": "^0.7.8",
+    "@effection/subscription": "^0.11.0",
     "bowser": "^2.9.0",
     "effection": "^0.7.0",
     "error-stack-parser": "^2.0.6",
