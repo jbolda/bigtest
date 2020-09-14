@@ -12,6 +12,7 @@ import { TestEvent } from '../src/schema/test-event';
 
 import { actions } from './helpers';
 
+if (process.platform !== 'win32') {
 describe('result stream', () => {
   let atom: Atom<OrchestratorState>;
   let slice: Slice<TestRunState, OrchestratorState>;
@@ -372,3 +373,4 @@ describe('result stream', () => {
     });
   });
 });
+}

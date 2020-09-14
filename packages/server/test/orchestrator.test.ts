@@ -6,6 +6,7 @@ import { Response } from 'node-fetch';
 
 import { actions } from './helpers';
 
+if (process.platform !== 'win32') {
 describe('orchestrator', () => {
   beforeEach(async function() {
     this.timeout(20000);
@@ -175,3 +176,4 @@ describe('orchestrator', () => {
   });
   }
 });
+}

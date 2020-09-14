@@ -78,6 +78,7 @@ function resultsQuery(testRunId: string, agentId: string) {
   `;
 }
 
+if (process.platform !== 'win32') {
 describe('running tests on an agent', () => {
   let client: Client;
   let agent: Agent;
@@ -434,3 +435,4 @@ describe('running tests on an agent', () => {
     });
   });
 });
+}
