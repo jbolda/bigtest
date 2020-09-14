@@ -1,0 +1,280 @@
+diff --git a/node_modules/@effection/node/dist/child_process.d.ts b/node_modules/@effection/node/dist/child_process.d.ts
+index 9c8f7ec..5eb6c29 100644
+--- a/node_modules/@effection/node/dist/child_process.d.ts
++++ b/node_modules/@effection/node/dist/child_process.d.ts
+@@ -1,6 +1,7 @@
+ /// <reference types="node" />
+-import { Operation } from 'effection';
+-import { SpawnOptions, ForkOptions } from 'child_process';
+-export { ChildProcess } from 'child_process';
++import { Operation } from "effection";
++import { SpawnOptions, ForkOptions, ChildProcess } from "child_process";
++export { ChildProcess } from "child_process";
+ export declare function spawn(command: string, args?: ReadonlyArray<string>, options?: SpawnOptions): Operation;
++export declare function spawnProcess(command: string, args?: ReadonlyArray<string>, options?: SpawnOptions): ChildProcess;
+ export declare function fork(module: string, args?: ReadonlyArray<string>, options?: ForkOptions): Operation;
+diff --git a/node_modules/@effection/node/dist/index.d.ts b/node_modules/@effection/node/dist/index.d.ts
+index 5c22657..be5de81 100644
+--- a/node_modules/@effection/node/dist/index.d.ts
++++ b/node_modules/@effection/node/dist/index.d.ts
+@@ -1,2 +1,3 @@
+ export { main, MainError } from './main';
+-export * as ChildProcess from './child_process';
++import * as ChildProcess from './child_process';
++export { ChildProcess };
+diff --git a/node_modules/@effection/node/dist/node.cjs.development.js b/node_modules/@effection/node/dist/node.cjs.development.js
+index 73488ab..1467bb5 100644
+--- a/node_modules/@effection/node/dist/node.cjs.development.js
++++ b/node_modules/@effection/node/dist/node.cjs.development.js
+@@ -2,6 +2,7 @@
+ 
+ var effection = require('effection');
+ var events = require('@effection/events');
++var childProcessCross = require('cross-spawn');
+ var childProcess = require('child_process');
+ 
+ class MainError extends Error {
+@@ -20,6 +21,7 @@ function main(operation) {
+     spawn(function* main() {
+       let interrupt = () => {
+         mainContext.halt();
++        process.exit();
+       };
+ 
+       let debug = () => console.debug(mainContext.toString());
+@@ -69,32 +71,45 @@ function* supervise(child, command, args = []) {
+     let [code] = yield events.once(child, "exit");
+ 
+     if (code !== 0) {
+-      throw new Error(`'${(command + args.join(' ')).trim()}' exited with non-zero exit code`);
++      throw new Error(`'${(command + args.join(" ")).trim()}' exited with non-zero exit code`);
+     }
+   } finally {
+     try {
+-      process.kill(-child.pid, "SIGTERM");
++      setTimeout(() => child.kill("SIGKILL"), 5000);
+     } catch (e) {// do nothing, process is probably already dead
+     }
+   }
+-}
++} // using the shell that invokes will also hide the window on windows
++
+ 
++const PROCESS_DEFAULTS = {
++  shell: process.env.shell || true,
++  detached: true,
++  stdio: "pipe",
++  timeout: 25 * 60 * 1000
++};
+ function* spawn(command, args, options) {
+-  let child = childProcess.spawn(command, args || [], Object.assign({}, options, {
+-    detached: true
+-  }));
++  let child = childProcessCross.spawn(command, args || [], Object.assign({}, options, PROCESS_DEFAULTS));
+   return yield effection.resource(child, supervise(child, command, args));
+ }
++function spawnProcess(command, args, options) {
++  var _spawned$stdin;
++
++  const spawned = childProcessCross.spawn(command, args || [], Object.assign({}, options, PROCESS_DEFAULTS));
++  spawned === null || spawned === void 0 ? void 0 : (_spawned$stdin = spawned.stdin) === null || _spawned$stdin === void 0 ? void 0 : _spawned$stdin.end();
++  spawned.unref();
++  return spawned;
++}
+ function* fork(module, args, options) {
+-  let child = childProcess.fork(module, args, Object.assign({}, options, {
+-    detached: true
+-  }));
++  let child = childProcess.fork(module, args, Object.assign({}, options, PROCESS_DEFAULTS));
++  child.unref();
+   return yield effection.resource(child, supervise(child, module, args));
+ }
+ 
+ var child_process = {
+   __proto__: null,
+   spawn: spawn,
++  spawnProcess: spawnProcess,
+   fork: fork
+ };
+ 
+diff --git a/node_modules/@effection/node/dist/node.cjs.development.js.map b/node_modules/@effection/node/dist/node.cjs.development.js.map
+index 84be1d8..ce4eaa4 100644
+--- a/node_modules/@effection/node/dist/node.cjs.development.js.map
++++ b/node_modules/@effection/node/dist/node.cjs.development.js.map
+@@ -1 +1 @@
+-{"version":3,"file":"node.cjs.development.js","sources":["../src/main.ts","../src/child_process.ts"],"sourcesContent":["import { main as effectionMain, Context, Operation } from 'effection';\n\ninterface MainErrorOptions {\n  exitCode?: number;\n  verbose?: boolean;\n  message?: string;\n}\n\nexport class MainError extends Error {\n  name = \"EffectionMainError\"\n\n  constructor(public options: MainErrorOptions = {}) {\n    super(options.message || \"error\");\n  }\n}\n\nexport function main<T>(operation: Operation<T>): Context<T> {\n  return effectionMain(({ context: mainContext, spawn }) => {\n    spawn(function* main() {\n      let interrupt = () => { mainContext.halt(); };\n      let debug = () => console.debug(mainContext.toString());\n      try {\n        process.on('SIGINT', interrupt);\n        process.on('SIGTERM', interrupt);\n        process.on('SIGUSR1', debug);\n        return yield operation;\n      } catch(e) {\n        if(e.name === 'EffectionMainError') {\n          if(e.options.message) {\n            console.error(e.options.message);\n          }\n          if(e.options.verbose) {\n            console.error(e.stack);\n          }\n          process.exit(e.options.exitCode || -1);\n        } else {\n          console.error(e);\n          process.exit(-1);\n        }\n      } finally {\n        process.off('SIGINT', interrupt);\n        process.off('SIGTERM', interrupt);\n        process.off('SIGUSR1', debug);\n      }\n    });\n  });\n}\n","import { Operation, resource } from 'effection';\nimport { once, throwOnErrorEvent } from '@effection/events';\n\nimport * as childProcess from 'child_process';\nimport { SpawnOptions, ForkOptions, ChildProcess } from 'child_process';\n\nexport { ChildProcess } from 'child_process';\n\nfunction *supervise(child: ChildProcess, command: string, args: readonly string[] = []) {\n  // Killing all child processes started by this command is surprisingly\n  // tricky. If a process spawns another processes and we kill the parent,\n  // then the child process is NOT automatically killed. Instead we're using\n  // the `detached` option to force the child into its own process group,\n  // which all of its children in turn will inherit. By sending the signal to\n  // `-pid` rather than `pid`, we are sending it to the entire process group\n  // instead. This will send the signal to all processes started by the child\n  // process.\n  //\n  // More information here: https://unix.stackexchange.com/questions/14815/process-descendants\n  try {\n    yield throwOnErrorEvent(child);\n\n    let [code]: [number] = yield once(child, \"exit\");\n    if(code !== 0) {\n      throw new Error(`'${(command + args.join(' ')).trim()}' exited with non-zero exit code`);\n    }\n  } finally {\n    try {\n      process.kill(-child.pid, \"SIGTERM\")\n    } catch(e) {\n      // do nothing, process is probably already dead\n    }\n  }\n}\n\nexport function *spawn(command: string, args?: ReadonlyArray<string>, options?: SpawnOptions): Operation {\n  let child = childProcess.spawn(command, args || [], Object.assign({}, options, {\n    detached: true,\n  }));\n  return yield resource(child, supervise(child, command, args));\n}\n\nexport function *fork(module: string, args?: ReadonlyArray<string>, options?: ForkOptions): Operation {\n  let child = childProcess.fork(module, args, Object.assign({}, options, {\n    detached: true,\n  }));\n  return yield resource(child, supervise(child, module, args));\n}\n"],"names":["MainError","Error","constructor","options","message","main","operation","effectionMain","context","mainContext","spawn","interrupt","halt","debug","console","toString","process","on","e","name","error","verbose","stack","exit","exitCode","off","supervise","child","command","args","throwOnErrorEvent","code","once","join","trim","kill","pid","childProcess","Object","assign","detached","resource","fork","module"],"mappings":"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"}
+\ No newline at end of file
++{"version":3,"file":"node.cjs.development.js","sources":["../src/main.ts","../src/child_process.ts"],"sourcesContent":["import { main as effectionMain, Context, Operation } from 'effection';\r\n\r\ninterface MainErrorOptions {\r\n  exitCode?: number;\r\n  verbose?: boolean;\r\n  message?: string;\r\n}\r\n\r\nexport class MainError extends Error {\r\n  name = \"EffectionMainError\"\r\n\r\n  constructor(public options: MainErrorOptions = {}) {\r\n    super(options.message || \"error\");\r\n  }\r\n}\r\n\r\nexport function main<T>(operation: Operation<T>): Context<T> {\r\n  return effectionMain(({ context: mainContext, spawn }) => {\r\n    spawn(function* main() {\r\n      let interrupt = () => { mainContext.halt(); process.exit(); };\r\n      let debug = () => console.debug(mainContext.toString());\r\n      try {\r\n        process.on('SIGINT', interrupt);\r\n        process.on('SIGTERM', interrupt);\r\n        process.on('SIGUSR1', debug);\r\n        return yield operation;\r\n      } catch(e) {\r\n        if(e.name === 'EffectionMainError') {\r\n          if(e.options.message) {\r\n            console.error(e.options.message);\r\n          }\r\n          if(e.options.verbose) {\r\n            console.error(e.stack);\r\n          }\r\n          process.exit(e.options.exitCode || -1);\r\n        } else {\r\n          console.error(e);\r\n          process.exit(-1);\r\n        }\r\n      } finally {\r\n        process.off('SIGINT', interrupt);\r\n        process.off('SIGTERM', interrupt);\r\n        process.off('SIGUSR1', debug);\r\n      }\r\n    });\r\n  });\r\n}\r\n","import { Operation, resource } from \"effection\";\r\nimport { once, throwOnErrorEvent } from \"@effection/events\";\r\n\r\nimport * as childProcessCross from \"cross-spawn\";\r\nimport * as childProcess from \"child_process\";\r\nimport { SpawnOptions, ForkOptions, ChildProcess } from \"child_process\";\r\n\r\nexport { ChildProcess } from \"child_process\";\r\n\r\nfunction* supervise(\r\n  child: ChildProcess,\r\n  command: string,\r\n  args: readonly string[] = []\r\n) {\r\n  // Killing all child processes started by this command is surprisingly\r\n  // tricky. If a process spawns another processes and we kill the parent,\r\n  // then the child process is NOT automatically killed. Instead we're using\r\n  // the `detached` option to force the child into its own process group,\r\n  // which all of its children in turn will inherit. By sending the signal to\r\n  // `-pid` rather than `pid`, we are sending it to the entire process group\r\n  // instead. This will send the signal to all processes started by the child\r\n  // process.\r\n  //\r\n  // More information here: https://unix.stackexchange.com/questions/14815/process-descendants\r\n  try {\r\n    yield throwOnErrorEvent(child);\r\n\r\n    let [code]: [number] = yield once(child, \"exit\");\r\n    if (code !== 0) {\r\n      throw new Error(\r\n        `'${(command + args.join(\" \")).trim()}' exited with non-zero exit code`\r\n      );\r\n    }\r\n  } finally {\r\n    try {\r\n      setTimeout(() => child.kill(\"SIGKILL\"), 5000);\r\n    } catch (e) {\r\n      // do nothing, process is probably already dead\r\n    }\r\n  }\r\n}\r\n\r\n// using the shell that invokes will also hide the window on windows\r\nconst PROCESS_DEFAULTS: SpawnOptions = {\r\n  shell: process.env.shell || true,\r\n  detached: true,\r\n  stdio: \"pipe\",\r\n  timeout: 25 * 60 * 1000,\r\n};\r\n\r\nexport function* spawn(\r\n  command: string,\r\n  args?: ReadonlyArray<string>,\r\n  options?: SpawnOptions\r\n): Operation {\r\n  let child = childProcessCross.spawn(\r\n    command,\r\n    args || [],\r\n    Object.assign({}, options, PROCESS_DEFAULTS)\r\n  );\r\n  return yield resource(child, supervise(child, command, args));\r\n}\r\n\r\nexport function spawnProcess(\r\n  command: string,\r\n  args?: ReadonlyArray<string>,\r\n  options?: SpawnOptions\r\n): ChildProcess {\r\n  const spawned = childProcessCross.spawn(\r\n    command,\r\n    args || [],\r\n    Object.assign({}, options, PROCESS_DEFAULTS)\r\n  );\r\n  spawned?.stdin?.end();\r\n  spawned.unref();\r\n  return spawned;\r\n}\r\n\r\nexport function* fork(\r\n  module: string,\r\n  args?: ReadonlyArray<string>,\r\n  options?: ForkOptions\r\n): Operation {\r\n  let child = childProcess.fork(\r\n    module,\r\n    args,\r\n    Object.assign({}, options, PROCESS_DEFAULTS)\r\n  );\r\n  child.unref()\r\n  return yield resource(child, supervise(child, module, args));\r\n}\r\n"],"names":["MainError","Error","constructor","options","message","main","operation","effectionMain","context","mainContext","spawn","interrupt","halt","process","exit","debug","console","toString","on","e","name","error","verbose","stack","exitCode","off","supervise","child","command","args","throwOnErrorEvent","code","once","join","trim","setTimeout","kill","PROCESS_DEFAULTS","shell","env","detached","stdio","timeout","childProcessCross","Object","assign","resource","spawnProcess","spawned","stdin","end","unref","fork","module","childProcess"],"mappings":"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"}
+\ No newline at end of file
+diff --git a/node_modules/@effection/node/dist/node.cjs.production.min.js b/node_modules/@effection/node/dist/node.cjs.production.min.js
+index 1534ca4..3a4d825 100644
+--- a/node_modules/@effection/node/dist/node.cjs.production.min.js
++++ b/node_modules/@effection/node/dist/node.cjs.production.min.js
+@@ -1,2 +1,2 @@
+-"use strict";var e=require("effection"),r=require("@effection/events"),o=require("child_process");class s extends Error{constructor(e={}){super(e.message||"error"),this.options=e,this.name="EffectionMainError"}}function*t(e,o,s=[]){try{yield r.throwOnErrorEvent(e);let[t]=yield r.once(e,"exit");if(0!==t)throw new Error(`'${(o+s.join(" ")).trim()}' exited with non-zero exit code`)}finally{try{process.kill(-e.pid,"SIGTERM")}catch(e){}}}exports.ChildProcess={__proto__:null,spawn:function*(r,s,n){let i=o.spawn(r,s||[],Object.assign({},n,{detached:!0}));return yield e.resource(i,t(i,r,s))},fork:function*(r,s,n){let i=o.fork(r,s,Object.assign({},n,{detached:!0}));return yield e.resource(i,t(i,r,s))}},exports.MainError=s,exports.main=function(r){return e.main(({context:e,spawn:o})=>{o((function*(){let o=()=>{e.halt()},s=()=>console.debug(e.toString());try{return process.on("SIGINT",o),process.on("SIGTERM",o),process.on("SIGUSR1",s),yield r}catch(e){"EffectionMainError"===e.name?(e.options.message&&console.error(e.options.message),e.options.verbose&&console.error(e.stack),process.exit(e.options.exitCode||-1)):(console.error(e),process.exit(-1))}finally{process.off("SIGINT",o),process.off("SIGTERM",o),process.off("SIGUSR1",s)}}))})};
++"use strict";var e=require("effection"),r=require("@effection/events"),o=require("cross-spawn"),s=require("child_process");class n extends Error{constructor(e={}){super(e.message||"error"),this.options=e,this.name="EffectionMainError"}}function*t(e,o,s=[]){try{yield r.throwOnErrorEvent(e);let[n]=yield r.once(e,"exit");if(0!==n)throw new Error(`'${(o+s.join(" ")).trim()}' exited with non-zero exit code`)}finally{try{setTimeout(()=>e.kill("SIGKILL"),5e3)}catch(e){}}}const i={shell:process.env.shell||!0,detached:!0,stdio:"pipe",timeout:15e5};exports.ChildProcess={__proto__:null,spawn:function*(r,s,n){let c=o.spawn(r,s||[],Object.assign({},n,i));return yield e.resource(c,t(c,r,s))},spawnProcess:function(e,r,s){var n;const t=o.spawn(e,r||[],Object.assign({},s,i));return null==t||null===(n=t.stdin)||void 0===n||n.end(),t.unref(),t},fork:function*(r,o,n){let c=s.fork(r,o,Object.assign({},n,i));return c.unref(),yield e.resource(c,t(c,r,o))}},exports.MainError=n,exports.main=function(r){return e.main(({context:e,spawn:o})=>{o((function*(){let o=()=>{e.halt(),process.exit()},s=()=>console.debug(e.toString());try{return process.on("SIGINT",o),process.on("SIGTERM",o),process.on("SIGUSR1",s),yield r}catch(e){"EffectionMainError"===e.name?(e.options.message&&console.error(e.options.message),e.options.verbose&&console.error(e.stack),process.exit(e.options.exitCode||-1)):(console.error(e),process.exit(-1))}finally{process.off("SIGINT",o),process.off("SIGTERM",o),process.off("SIGUSR1",s)}}))})};
+ //# sourceMappingURL=node.cjs.production.min.js.map
+diff --git a/node_modules/@effection/node/dist/node.cjs.production.min.js.map b/node_modules/@effection/node/dist/node.cjs.production.min.js.map
+index 9bad1d7..08904ad 100644
+--- a/node_modules/@effection/node/dist/node.cjs.production.min.js.map
++++ b/node_modules/@effection/node/dist/node.cjs.production.min.js.map
+@@ -1 +1 @@
+-{"version":3,"file":"node.cjs.production.min.js","sources":["../src/main.ts","../src/child_process.ts"],"sourcesContent":["import { main as effectionMain, Context, Operation } from 'effection';\n\ninterface MainErrorOptions {\n  exitCode?: number;\n  verbose?: boolean;\n  message?: string;\n}\n\nexport class MainError extends Error {\n  name = \"EffectionMainError\"\n\n  constructor(public options: MainErrorOptions = {}) {\n    super(options.message || \"error\");\n  }\n}\n\nexport function main<T>(operation: Operation<T>): Context<T> {\n  return effectionMain(({ context: mainContext, spawn }) => {\n    spawn(function* main() {\n      let interrupt = () => { mainContext.halt(); };\n      let debug = () => console.debug(mainContext.toString());\n      try {\n        process.on('SIGINT', interrupt);\n        process.on('SIGTERM', interrupt);\n        process.on('SIGUSR1', debug);\n        return yield operation;\n      } catch(e) {\n        if(e.name === 'EffectionMainError') {\n          if(e.options.message) {\n            console.error(e.options.message);\n          }\n          if(e.options.verbose) {\n            console.error(e.stack);\n          }\n          process.exit(e.options.exitCode || -1);\n        } else {\n          console.error(e);\n          process.exit(-1);\n        }\n      } finally {\n        process.off('SIGINT', interrupt);\n        process.off('SIGTERM', interrupt);\n        process.off('SIGUSR1', debug);\n      }\n    });\n  });\n}\n","import { Operation, resource } from 'effection';\nimport { once, throwOnErrorEvent } from '@effection/events';\n\nimport * as childProcess from 'child_process';\nimport { SpawnOptions, ForkOptions, ChildProcess } from 'child_process';\n\nexport { ChildProcess } from 'child_process';\n\nfunction *supervise(child: ChildProcess, command: string, args: readonly string[] = []) {\n  // Killing all child processes started by this command is surprisingly\n  // tricky. If a process spawns another processes and we kill the parent,\n  // then the child process is NOT automatically killed. Instead we're using\n  // the `detached` option to force the child into its own process group,\n  // which all of its children in turn will inherit. By sending the signal to\n  // `-pid` rather than `pid`, we are sending it to the entire process group\n  // instead. This will send the signal to all processes started by the child\n  // process.\n  //\n  // More information here: https://unix.stackexchange.com/questions/14815/process-descendants\n  try {\n    yield throwOnErrorEvent(child);\n\n    let [code]: [number] = yield once(child, \"exit\");\n    if(code !== 0) {\n      throw new Error(`'${(command + args.join(' ')).trim()}' exited with non-zero exit code`);\n    }\n  } finally {\n    try {\n      process.kill(-child.pid, \"SIGTERM\")\n    } catch(e) {\n      // do nothing, process is probably already dead\n    }\n  }\n}\n\nexport function *spawn(command: string, args?: ReadonlyArray<string>, options?: SpawnOptions): Operation {\n  let child = childProcess.spawn(command, args || [], Object.assign({}, options, {\n    detached: true,\n  }));\n  return yield resource(child, supervise(child, command, args));\n}\n\nexport function *fork(module: string, args?: ReadonlyArray<string>, options?: ForkOptions): Operation {\n  let child = childProcess.fork(module, args, Object.assign({}, options, {\n    detached: true,\n  }));\n  return yield resource(child, supervise(child, module, args));\n}\n"],"names":["MainError","Error","constructor","options","message","supervise","child","command","args","throwOnErrorEvent","code","once","join","trim","process","kill","pid","e","childProcess","Object","assign","detached","resource","module","operation","effectionMain","context","mainContext","spawn","interrupt","halt","debug","console","toString","on","name","error","verbose","stack","exit","exitCode","off"],"mappings":"wGAQaA,UAAkBC,MAG7BC,YAAmBC,EAA4B,UACvCA,EAAQC,SAAW,sBADRD,YAFZ,sBCDT,SAAUE,EAAUC,EAAqBC,EAAiBC,EAA0B,cAY1EC,oBAAkBH,OAEnBI,SAAwBC,OAAKL,EAAO,WAC7B,IAATI,QACK,IAAIT,WAAWM,EAAUC,EAAKI,KAAK,MAAMC,sDAI/CC,QAAQC,MAAMT,EAAMU,IAAK,WACzB,MAAMC,iDAMZ,UAAuBV,EAAiBC,EAA8BL,OAChEG,EAAQY,QAAmBX,EAASC,GAAQ,GAAIW,OAAOC,OAAO,GAAIjB,EAAS,CAC7EkB,UAAU,kBAECC,WAAShB,EAAOD,EAAUC,EAAOC,EAASC,UAGzD,UAAsBe,EAAgBf,EAA8BL,OAC9DG,EAAQY,OAAkBK,EAAQf,EAAMW,OAAOC,OAAO,GAAIjB,EAAS,CACrEkB,UAAU,kBAECC,WAAShB,EAAOD,EAAUC,EAAOiB,EAAQf,gDD9BhCgB,UACfC,OAAc,EAAGC,QAASC,EAAaC,MAAAA,MAC5CA,GAAM,gBACAC,EAAY,KAAQF,EAAYG,QAChCC,EAAQ,IAAMC,QAAQD,MAAMJ,EAAYM,uBAE1CnB,QAAQoB,GAAG,SAAUL,GACrBf,QAAQoB,GAAG,UAAWL,GACtBf,QAAQoB,GAAG,UAAWH,SACTP,EACb,MAAMP,GACQ,uBAAXA,EAAEkB,MACAlB,EAAEd,QAAQC,SACX4B,QAAQI,MAAMnB,EAAEd,QAAQC,SAEvBa,EAAEd,QAAQkC,SACXL,QAAQI,MAAMnB,EAAEqB,OAElBxB,QAAQyB,KAAKtB,EAAEd,QAAQqC,WAAa,KAEpCR,QAAQI,MAAMnB,GACdH,QAAQyB,MAAM,YAGhBzB,QAAQ2B,IAAI,SAAUZ,GACtBf,QAAQ2B,IAAI,UAAWZ,GACvBf,QAAQ2B,IAAI,UAAWV"}
+\ No newline at end of file
++{"version":3,"file":"node.cjs.production.min.js","sources":["../src/main.ts","../src/child_process.ts"],"sourcesContent":["import { main as effectionMain, Context, Operation } from 'effection';\r\n\r\ninterface MainErrorOptions {\r\n  exitCode?: number;\r\n  verbose?: boolean;\r\n  message?: string;\r\n}\r\n\r\nexport class MainError extends Error {\r\n  name = \"EffectionMainError\"\r\n\r\n  constructor(public options: MainErrorOptions = {}) {\r\n    super(options.message || \"error\");\r\n  }\r\n}\r\n\r\nexport function main<T>(operation: Operation<T>): Context<T> {\r\n  return effectionMain(({ context: mainContext, spawn }) => {\r\n    spawn(function* main() {\r\n      let interrupt = () => { mainContext.halt(); process.exit(); };\r\n      let debug = () => console.debug(mainContext.toString());\r\n      try {\r\n        process.on('SIGINT', interrupt);\r\n        process.on('SIGTERM', interrupt);\r\n        process.on('SIGUSR1', debug);\r\n        return yield operation;\r\n      } catch(e) {\r\n        if(e.name === 'EffectionMainError') {\r\n          if(e.options.message) {\r\n            console.error(e.options.message);\r\n          }\r\n          if(e.options.verbose) {\r\n            console.error(e.stack);\r\n          }\r\n          process.exit(e.options.exitCode || -1);\r\n        } else {\r\n          console.error(e);\r\n          process.exit(-1);\r\n        }\r\n      } finally {\r\n        process.off('SIGINT', interrupt);\r\n        process.off('SIGTERM', interrupt);\r\n        process.off('SIGUSR1', debug);\r\n      }\r\n    });\r\n  });\r\n}\r\n","import { Operation, resource } from \"effection\";\r\nimport { once, throwOnErrorEvent } from \"@effection/events\";\r\n\r\nimport * as childProcessCross from \"cross-spawn\";\r\nimport * as childProcess from \"child_process\";\r\nimport { SpawnOptions, ForkOptions, ChildProcess } from \"child_process\";\r\n\r\nexport { ChildProcess } from \"child_process\";\r\n\r\nfunction* supervise(\r\n  child: ChildProcess,\r\n  command: string,\r\n  args: readonly string[] = []\r\n) {\r\n  // Killing all child processes started by this command is surprisingly\r\n  // tricky. If a process spawns another processes and we kill the parent,\r\n  // then the child process is NOT automatically killed. Instead we're using\r\n  // the `detached` option to force the child into its own process group,\r\n  // which all of its children in turn will inherit. By sending the signal to\r\n  // `-pid` rather than `pid`, we are sending it to the entire process group\r\n  // instead. This will send the signal to all processes started by the child\r\n  // process.\r\n  //\r\n  // More information here: https://unix.stackexchange.com/questions/14815/process-descendants\r\n  try {\r\n    yield throwOnErrorEvent(child);\r\n\r\n    let [code]: [number] = yield once(child, \"exit\");\r\n    if (code !== 0) {\r\n      throw new Error(\r\n        `'${(command + args.join(\" \")).trim()}' exited with non-zero exit code`\r\n      );\r\n    }\r\n  } finally {\r\n    try {\r\n      setTimeout(() => child.kill(\"SIGKILL\"), 5000);\r\n    } catch (e) {\r\n      // do nothing, process is probably already dead\r\n    }\r\n  }\r\n}\r\n\r\n// using the shell that invokes will also hide the window on windows\r\nconst PROCESS_DEFAULTS: SpawnOptions = {\r\n  shell: process.env.shell || true,\r\n  detached: true,\r\n  stdio: \"pipe\",\r\n  timeout: 25 * 60 * 1000,\r\n};\r\n\r\nexport function* spawn(\r\n  command: string,\r\n  args?: ReadonlyArray<string>,\r\n  options?: SpawnOptions\r\n): Operation {\r\n  let child = childProcessCross.spawn(\r\n    command,\r\n    args || [],\r\n    Object.assign({}, options, PROCESS_DEFAULTS)\r\n  );\r\n  return yield resource(child, supervise(child, command, args));\r\n}\r\n\r\nexport function spawnProcess(\r\n  command: string,\r\n  args?: ReadonlyArray<string>,\r\n  options?: SpawnOptions\r\n): ChildProcess {\r\n  const spawned = childProcessCross.spawn(\r\n    command,\r\n    args || [],\r\n    Object.assign({}, options, PROCESS_DEFAULTS)\r\n  );\r\n  spawned?.stdin?.end();\r\n  spawned.unref();\r\n  return spawned;\r\n}\r\n\r\nexport function* fork(\r\n  module: string,\r\n  args?: ReadonlyArray<string>,\r\n  options?: ForkOptions\r\n): Operation {\r\n  let child = childProcess.fork(\r\n    module,\r\n    args,\r\n    Object.assign({}, options, PROCESS_DEFAULTS)\r\n  );\r\n  child.unref()\r\n  return yield resource(child, supervise(child, module, args));\r\n}\r\n"],"names":["MainError","Error","constructor","options","message","supervise","child","command","args","throwOnErrorEvent","code","once","join","trim","setTimeout","kill","e","PROCESS_DEFAULTS","shell","process","env","detached","stdio","timeout","childProcessCross","Object","assign","resource","spawned","stdin","end","unref","module","childProcess","operation","effectionMain","context","mainContext","spawn","interrupt","halt","exit","debug","console","toString","on","name","error","verbose","stack","exitCode","off"],"mappings":"iIAQaA,UAAkBC,MAG7BC,YAAmBC,EAA4B,UACvCA,EAAQC,SAAW,sBADRD,YAFZ,sBCAT,SAAUE,EACRC,EACAC,EACAC,EAA0B,cAalBC,oBAAkBH,OAEnBI,SAAwBC,OAAKL,EAAO,WAC5B,IAATI,QACI,IAAIT,WACHM,EAAUC,EAAKI,KAAK,MAAMC,sDAKjCC,WAAW,IAAMR,EAAMS,KAAK,WAAY,KACxC,MAAOC,MAOb,MAAMC,EAAiC,CACrCC,MAAOC,QAAQC,IAAIF,QAAS,EAC5BG,UAAU,EACVC,MAAO,OACPC,QAAS,iDAGX,UACEhB,EACAC,EACAL,OAEIG,EAAQkB,QACVjB,EACAC,GAAQ,GACRiB,OAAOC,OAAO,GAAIvB,EAASc,iBAEhBU,WAASrB,EAAOD,EAAUC,EAAOC,EAASC,kBAGzD,SACED,EACAC,EACAL,eAEMyB,EAAUJ,QACdjB,EACAC,GAAQ,GACRiB,OAAOC,OAAO,GAAIvB,EAASc,WAE7BW,MAAAA,aAAAA,EAASC,sBAAOC,MAChBF,EAAQG,QACDH,QAGT,UACEI,EACAxB,EACAL,OAEIG,EAAQ2B,OACVD,EACAxB,EACAiB,OAAOC,OAAO,GAAIvB,EAASc,WAE7BX,EAAMyB,cACOJ,WAASrB,EAAOD,EAAUC,EAAO0B,EAAQxB,gDDzEhC0B,UACfC,OAAc,EAAGC,QAASC,EAAaC,MAAAA,MAC5CA,GAAM,gBACAC,EAAY,KAAQF,EAAYG,OAAQrB,QAAQsB,QAChDC,EAAQ,IAAMC,QAAQD,MAAML,EAAYO,uBAE1CzB,QAAQ0B,GAAG,SAAUN,GACrBpB,QAAQ0B,GAAG,UAAWN,GACtBpB,QAAQ0B,GAAG,UAAWH,SACTR,EACb,MAAMlB,GACQ,uBAAXA,EAAE8B,MACA9B,EAAEb,QAAQC,SACXuC,QAAQI,MAAM/B,EAAEb,QAAQC,SAEvBY,EAAEb,QAAQ6C,SACXL,QAAQI,MAAM/B,EAAEiC,OAElB9B,QAAQsB,KAAKzB,EAAEb,QAAQ+C,WAAa,KAEpCP,QAAQI,MAAM/B,GACdG,QAAQsB,MAAM,YAGhBtB,QAAQgC,IAAI,SAAUZ,GACtBpB,QAAQgC,IAAI,UAAWZ,GACvBpB,QAAQgC,IAAI,UAAWT"}
+\ No newline at end of file
+diff --git a/node_modules/@effection/node/src/child_process.ts b/node_modules/@effection/node/src/child_process.ts
+index e31a9a9..0bd96e4 100644
+--- a/node_modules/@effection/node/src/child_process.ts
++++ b/node_modules/@effection/node/src/child_process.ts
+@@ -1,12 +1,17 @@
+-import { Operation, resource } from 'effection';
+-import { once, throwOnErrorEvent } from '@effection/events';
++import { Operation, resource } from "effection";
++import { once, throwOnErrorEvent } from "@effection/events";
+ 
+-import * as childProcess from 'child_process';
+-import { SpawnOptions, ForkOptions, ChildProcess } from 'child_process';
++import * as childProcessCross from "cross-spawn";
++import * as childProcess from "child_process";
++import { SpawnOptions, ForkOptions, ChildProcess } from "child_process";
+ 
+-export { ChildProcess } from 'child_process';
++export { ChildProcess } from "child_process";
+ 
+-function *supervise(child: ChildProcess, command: string, args: readonly string[] = []) {
++function* supervise(
++  child: ChildProcess,
++  command: string,
++  args: readonly string[] = []
++) {
+   // Killing all child processes started by this command is surprisingly
+   // tricky. If a process spawns another processes and we kill the parent,
+   // then the child process is NOT automatically killed. Instead we're using
+@@ -21,28 +26,66 @@ function *supervise(child: ChildProcess, command: string, args: readonly string[
+     yield throwOnErrorEvent(child);
+ 
+     let [code]: [number] = yield once(child, "exit");
+-    if(code !== 0) {
+-      throw new Error(`'${(command + args.join(' ')).trim()}' exited with non-zero exit code`);
++    if (code !== 0) {
++      throw new Error(
++        `'${(command + args.join(" ")).trim()}' exited with non-zero exit code`
++      );
+     }
+   } finally {
+     try {
+-      process.kill(-child.pid, "SIGTERM")
+-    } catch(e) {
++      setTimeout(() => child.kill("SIGKILL"), 5000);
++    } catch (e) {
+       // do nothing, process is probably already dead
+     }
+   }
+ }
+ 
+-export function *spawn(command: string, args?: ReadonlyArray<string>, options?: SpawnOptions): Operation {
+-  let child = childProcess.spawn(command, args || [], Object.assign({}, options, {
+-    detached: true,
+-  }));
++// using the shell that invokes will also hide the window on windows
++const PROCESS_DEFAULTS: SpawnOptions = {
++  shell: process.env.shell || true,
++  detached: true,
++  stdio: "pipe",
++  timeout: 25 * 60 * 1000,
++};
++
++export function* spawn(
++  command: string,
++  args?: ReadonlyArray<string>,
++  options?: SpawnOptions
++): Operation {
++  let child = childProcessCross.spawn(
++    command,
++    args || [],
++    Object.assign({}, options, PROCESS_DEFAULTS)
++  );
+   return yield resource(child, supervise(child, command, args));
+ }
+ 
+-export function *fork(module: string, args?: ReadonlyArray<string>, options?: ForkOptions): Operation {
+-  let child = childProcess.fork(module, args, Object.assign({}, options, {
+-    detached: true,
+-  }));
++export function spawnProcess(
++  command: string,
++  args?: ReadonlyArray<string>,
++  options?: SpawnOptions
++): ChildProcess {
++  const spawned = childProcessCross.spawn(
++    command,
++    args || [],
++    Object.assign({}, options, PROCESS_DEFAULTS)
++  );
++  spawned?.stdin?.end();
++  spawned.unref();
++  return spawned;
++}
++
++export function* fork(
++  module: string,
++  args?: ReadonlyArray<string>,
++  options?: ForkOptions
++): Operation {
++  let child = childProcess.fork(
++    module,
++    args,
++    Object.assign({}, options, PROCESS_DEFAULTS)
++  );
++  child.unref()
+   return yield resource(child, supervise(child, module, args));
+ }
+diff --git a/node_modules/@effection/node/src/index.ts b/node_modules/@effection/node/src/index.ts
+index 5c22657..f1c33b6 100644
+--- a/node_modules/@effection/node/src/index.ts
++++ b/node_modules/@effection/node/src/index.ts
+@@ -1,2 +1,3 @@
+ export { main, MainError } from './main';
+-export * as ChildProcess from './child_process';
++import * as ChildProcess from './child_process';
++export { ChildProcess }
+diff --git a/node_modules/@effection/node/src/main.ts b/node_modules/@effection/node/src/main.ts
+index f9584c7..f9ce39a 100644
+--- a/node_modules/@effection/node/src/main.ts
++++ b/node_modules/@effection/node/src/main.ts
+@@ -17,7 +17,7 @@ export class MainError extends Error {
+ export function main<T>(operation: Operation<T>): Context<T> {
+   return effectionMain(({ context: mainContext, spawn }) => {
+     spawn(function* main() {
+-      let interrupt = () => { mainContext.halt(); };
++      let interrupt = () => { mainContext.halt(); process.exit(); };
+       let debug = () => console.debug(mainContext.toString());
+       try {
+         process.on('SIGINT', interrupt);
+diff --git a/node_modules/@effection/node/tsconfig.dist.json b/node_modules/@effection/node/tsconfig.dist.json
+new file mode 100644
+index 0000000..a1c9a07
+--- /dev/null
++++ b/node_modules/@effection/node/tsconfig.dist.json
+@@ -0,0 +1,7 @@
++{
++  "extends": "./tsconfig",
++  "compilerOptions": {
++    "module": "esnext"
++  },
++  "exclude": ["./test/*"]
++}
+diff --git a/node_modules/@effection/node/tsconfig.json b/node_modules/@effection/node/tsconfig.json
+new file mode 100644
+index 0000000..835c7c0
+--- /dev/null
++++ b/node_modules/@effection/node/tsconfig.json
+@@ -0,0 +1,7 @@
++{
++  "extends": "@frontside/tsconfig",
++  "include": [
++    "src/**/*.ts",
++    "test/**/*.ts"
++  ]
++}

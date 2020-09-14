@@ -1,6 +1,6 @@
 import { resource, spawn, timeout, Operation } from 'effection';
 import { ensure, Deferred } from '@bigtest/effection';
-import { spawn as spawnProcess, ChildProcess } from 'child_process';
+import { ChildProcess } from '@effection/node';
 import { once } from '@effection/events';
 
 import { Stream } from './stream';
@@ -12,7 +12,7 @@ interface ProcessOptions {
 export class Process {
   public stdout?: Stream;
   public stderr?: Stream;
-  private child?: ChildProcess;
+  private child?: ChildProcess.ChildProcess;
   private exited = Deferred<[number,number]>();
 
   public code?: number;
@@ -30,7 +30,17 @@ export class Process {
   }
 
   term() {
-    if(this.child && this.child.pid) {
+    if(this.child) {
+      try {
+        this.kill()
+      } catch(e) {
+        // do nothing, process is probably already dead
+      }
+    }
+  }
+
+  kill() {
+    if(this.child) {
       // Killing all child processes started by this command is surprisingly
       // tricky. If a process spawns another processes and we kill the parent,
       // then the child process is NOT automatically killed. Instead we're using
@@ -41,21 +51,14 @@ export class Process {
       // process.
       //
       // More information here: https://unix.stackexchange.com/questions/14815/process-descendants
+
       try {
         process.kill(-this.child.pid, "SIGTERM")
       } catch(e) {
-        // do nothing, process is probably already dead
-      }
-    }
-  }
-
-  kill() {
-    if(this.child && this.child.pid) {
-      try {
         process.kill(-this.child.pid, "SIGKILL")
-      } catch(e) {
-        // do nothing, process is probably already dead
       }
+      process.stdout.end();
+      process.stderr.end();
     }
   }
 
@@ -69,28 +72,24 @@ export class Process {
     });
 
     yield this.join();
-
   }
 
   *run(): Operation<void> {
     yield ensure(() => this.term());
-    this.child = spawnProcess(this.command, this.args, {
-      shell: true,
-      detached: true,
-    });
+    this.child = ChildProcess.spawnProcess(this.command, this.args);
 
-    if (this.child.stdout) {
+    if (this.child?.stdout) {
       this.stdout = yield Stream.of(this.child.stdout, this.options.verbose);
     }
-    if (this.child.stderr) {
+    if (this.child?.stderr) {
       this.stderr = yield Stream.of(this.child.stderr, this.options.verbose);
     }
 
-    let [code, signal] = yield once(this.child, 'exit');
+    let {exitCode, signal} = yield once(this.child, 'exit');
 
-    this.code = code;
+    this.code = exitCode;
     this.signal = signal;
 
-    this.exited.resolve([code, signal]);
+    this.exited.resolve([exitCode, signal]);
   }
 }
