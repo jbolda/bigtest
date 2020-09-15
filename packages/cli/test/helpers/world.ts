@@ -12,12 +12,4 @@ afterEach(() => {
     console.error(World.result);
   }
   World.halt();
-  // @ts-ignore
-  process._getActiveHandles().forEach((handle) => {
-    try {
-    handle.stdin.end()
-    } catch (e) {
-      // no-op
-    }
-  });
 })

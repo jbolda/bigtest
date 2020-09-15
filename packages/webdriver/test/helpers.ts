@@ -10,14 +10,6 @@ beforeEach(() => {
 
 afterEach(() => {
   currentWorld.halt();
-  // @ts-ignore
-  // process._getActiveHandles().forEach((handle) => {
-  //   try {
-  //   handle.stdin.end();
-  //   } catch (e) {
-  //     // no-op
-  //   }
-  // });
 });
 
 export function spawn<T>(operation: Operation<T>): Promise<T> {
