@@ -162,6 +162,7 @@ describe('manifest builder', () => {
       );
     });
 
+    if (process.platform !== 'win32') {
     it("should update the global state with the error detail", () => {
       let bundlerState = atom.get().bundler;
 
@@ -173,5 +174,6 @@ describe('manifest builder', () => {
 
       expect(error.frame).toBeTruthy();
     });
+    }
   });
 });

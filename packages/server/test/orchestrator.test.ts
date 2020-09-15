@@ -120,6 +120,7 @@ describe('orchestrator', () => {
     });
   });
 
+  if (process.platform !== 'win32') {
   describe('an externally managed application', () => {
     let port: number;
 
@@ -171,4 +172,5 @@ describe('orchestrator', () => {
       });
     });
   });
+  }
 });

@@ -181,6 +181,7 @@ describe('result stream', () => {
   });
 
   describe('tests', () => {
+    if (process.platform !== 'win32') {
     describe('marking a test as running', () => {
       beforeEach(() => {
         slice.slice('agents', 'agent-1', 'result', 'status').set('running');
@@ -196,6 +197,7 @@ describe('result stream', () => {
         });
       });
     });
+    }
 
     describe('marking a test as ok', () => {
       beforeEach(() => {
