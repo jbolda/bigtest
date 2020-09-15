@@ -48,7 +48,8 @@
     "@changesets/cli": "^2.8.0",
     "@types/node": "^12",
     "patch-package": "^6.2.2",
-    "postinstall-postinstall": "^2.1.0"
+    "postinstall-postinstall": "^2.1.0",
+    "wtfnode": "^0.8.3"
   },
   "resolutions": {
     "lodash": "4.17.19",

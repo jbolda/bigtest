@@ -15146,6 +15146,11 @@ ws@^7.2.3:
   resolved "https://registry.yarnpkg.com/ws/-/ws-7.3.0.tgz#4b2f7f219b3d3737bc1a2fbf145d825b94d38ffd"
   integrity sha512-iFtXzngZVXPGgpTlP1rBqsUK82p9tKqsWRPg5L56egiljujJT3vGAYnHANvFxBieXrTFavhzhxW52jnaWV+w2w==
 
+wtfnode@^0.8.3:
+  version "0.8.3"
+  resolved "https://registry.yarnpkg.com/wtfnode/-/wtfnode-0.8.3.tgz#39c40830555c9eb69e8bc2c57d6be5abe8bf5d0b"
+  integrity sha512-Ll7iH8MbRQTE+QTw20Xax/0PM5VeSVSOhsmoR3+knWuJkEWTV5d9yPO6Sb+IDbt9I4UCrKpvHuF9T9zteRNOuA==
+
 xml-name-validator@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/xml-name-validator/-/xml-name-validator-3.0.0.tgz#6ae73e06de4d8c6e47f9fb181f78d648ad457c6a"
