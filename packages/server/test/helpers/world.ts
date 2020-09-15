@@ -13,8 +13,7 @@ export class World {
     // @ts-ignore
     process._getActiveHandles().forEach((handle) => {
       try {
-      handle.stdout.end()
-      handle.stderr.end()
+      handle.stdin.end();
       } catch (e) {
         // no-op
       }
