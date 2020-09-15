@@ -11,7 +11,6 @@ function run(...args: string[]) {
   });
 }
 
-if (process.platform !== 'win32') {
 describe('@bigtest/cli', function() {
   this.timeout(process.env.CI ? 120000 : 30000);
 
@@ -186,4 +185,3 @@ describe('@bigtest/cli', function() {
     });
   });
 });
-}
