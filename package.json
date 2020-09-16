@@ -54,5 +54,8 @@
   "resolutions": {
     "lodash": "4.17.19",
     "@definitelytyped/typescript-versions": "^0.0.40"
+  },
+  "dependencies": {
+    "tree-kill": "^1.2.2"
   }
 }
