@@ -2,7 +2,6 @@ import { timeout, Operation, spawn } from 'effection';
 import { once } from '@effection/events';
 import { fetch } from '@effection/fetch';
 import { ChildProcess } from '@effection/node';
-import * as process from 'process';
 import { OrchestratorState, AppOptions } from './orchestrator/state';
 import { Atom } from '@bigtest/atom';
 import { restartable } from './effection/restartable'
@@ -28,9 +27,6 @@ const startApp = ({ atom }: AppServerOptions) => function* (options: AppOptions)
   if (options.command) {
     let child = yield ChildProcess.spawn(options.command as string, [], {
       cwd: options.dir,
-      detached: true,
-      env: Object.assign({}, process.env, options.env),
-      shell: true,
     });
 
     yield spawn(function* () {
