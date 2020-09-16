@@ -32,46 +32,11 @@ export class Process {
   term() {
     if(this.child) {
       try {
-        this.kill()
+        this.child.kill('SIGTERM')
       } catch(e) {
         // do nothing, process is probably already dead
       }
     }
-  }
-
-  kill() {
-    if(this.child) {
-      // Killing all child processes started by this command is surprisingly
-      // tricky. If a process spawns another processes and we kill the parent,
-      // then the child process is NOT automatically killed. Instead we're using
-      // the `detached` option to force the child into its own process group,
-      // which all of its children in turn will inherit. By sending the signal to
-      // `-pid` rather than `pid`, we are sending it to the entire process group
-      // instead. This will send the signal to all processes started by the child
-      // process.
-      //
-      // More information here: https://unix.stackexchange.com/questions/14815/process-descendants
-
-      try {
-        process.kill(-this.child.pid, "SIGTERM")
-      } catch(e) {
-        process.kill(-this.child.pid, "SIGKILL")
-      }
-      process.stdout.end();
-      process.stderr.end();
-    }
-  }
-
-  *close(t = 2000): Operation<void> {
-    let kill = () => this.kill();
-    this.term();
-    yield spawn(function*(): Operation<void> {
-      yield timeout(t);
-      kill(); // always try to clean up the process group in case the process left behind some orphans
-      throw new Error("unable to shut down child process cleanly");
-    });
-
-    yield this.join();
   }
 
   *run(): Operation<void> {

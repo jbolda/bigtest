@@ -6,9 +6,7 @@ import { Process } from './helpers/process';
 import { World } from './helpers/world';
 
 function run(...args: string[]) {
-  return Process.spawn("yarn ts-node ./src/index.ts", args, {
-    verbose: !!process.env["LOG_CLI"]
-  });
+  return Process.spawn("yarn", ["ts-node", "./src/index.ts", ...args], {});
 }
 
 describe('@bigtest/cli', function() {
@@ -36,7 +34,7 @@ describe('@bigtest/cli', function() {
       let childApp: Process;
 
       beforeEach(async () => {
-        childApp = await World.spawn(Process.spawn('yarn bigtest-todomvc 36001', [], {}));
+        childApp = await World.spawn(Process.spawn('yarn', ['bigtest-todomvc', '36001'], {}));
         child = await World.spawn(run('server', '--launch', 'chrome.headless', '--app.url', 'http://localhost:36001', '--no-app.command', '--test-files', './test/fixtures/passing.test.ts'));
       });
 
