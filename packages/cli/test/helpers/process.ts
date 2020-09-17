@@ -29,14 +29,17 @@ export class Process {
     return yield this.exited.promise;
   }
 
-  term() {
+  *term(): Operation<string> {
     if(this.child) {
       try {
         this.child.kill('SIGTERM')
+        return 'SIGTERM signaled'
       } catch(e) {
         // do nothing, process is probably already dead
+        return 'error caught in signaling SIGTERM'
       }
     }
+    return 'child is dead already'
   }
 
   *run(): Operation<void> {

@@ -21,7 +21,7 @@ describe('@bigtest/cli', function() {
       });
 
       afterEach(async () => {
-        await World.spawn(child.close());
+        await World.spawn(child.term());
       });
 
       it('outputs that the server was started successfully', async () => {
@@ -39,8 +39,8 @@ describe('@bigtest/cli', function() {
       });
 
       afterEach(async () => {
-        await World.spawn(child.close());
-        await World.spawn(childApp.close());
+        await World.spawn(child.term());
+        await World.spawn(childApp.term());
       });
 
       it('outputs that the server was started successfully', async () => {
@@ -56,7 +56,7 @@ describe('@bigtest/cli', function() {
       });
 
       afterEach(async () => {
-        await World.spawn(child.close());
+        await World.spawn(child.term());
       });
 
       it('outputs that the server was started successfully', async () => {
@@ -76,7 +76,7 @@ describe('@bigtest/cli', function() {
       });
 
       afterEach(async () => {
-        await World.spawn(runChild.close());
+        await World.spawn(runChild.term());
       });
 
       it("provides a nice error with advice to start `bigtest server`", () => {
@@ -99,7 +99,7 @@ describe('@bigtest/cli', function() {
       });
 
       afterEach(async () => {
-        await World.spawn(startChild.close());
+        await World.spawn(startChild.term());
       });
 
       it('exits successfully', async () => {
@@ -123,7 +123,7 @@ describe('@bigtest/cli', function() {
       });
 
       afterEach(async () => {
-        await World.spawn(startChild.close());
+        await World.spawn(startChild.term());
       });
 
       it('exits with error code', async () => {
@@ -144,7 +144,7 @@ describe('@bigtest/cli', function() {
       });
 
       afterEach(async () => {
-        await World.spawn(child.close());
+        await World.spawn(child.term());
       });
 
       it('exits successfully', async () => {
@@ -163,7 +163,7 @@ describe('@bigtest/cli', function() {
       });
 
       afterEach(async () => {
-        await World.spawn(child.close());
+        await World.spawn(child.term());
       });
 
       it('exits with error code', async () => {
