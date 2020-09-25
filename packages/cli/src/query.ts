@@ -36,12 +36,13 @@ const fragments = `
 export function run() {
   return fragments + `
     subscription(
+      $files: [String!]! = [],
       $showInternalStackTrace: Boolean! = true,
       $showDependenciesStackTrace: Boolean! = true,
       $showStackTraceCode: Boolean! = true,
       $showLog: Boolean! = true
     ) {
-      event: run {
+      event: run(files: $files) {
         type
         status
         agentId
@@ -83,6 +84,7 @@ export function test() {
     ) {
       testRun(id: $testRunId) {
         status
+        error { ...ErrorDetails }
         agents {
           agent {
             agentId
@@ -152,6 +154,7 @@ export type ResultSummary = { stepCounts: ResultCounts; assertionCounts: ResultC
 export type TestResults = {
   testRun: {
     status: ResultStatus;
+    error?: ErrorDetails;
     agents: {
       status: ResultStatus;
       agent: {

@@ -78,6 +78,17 @@ describe('@bigtest/globals', () => {
     });
   });
 
+  describe('defaultAppTimeout', () => {
+    it('returns 20000 by default', () => {
+      expect(bigtestGlobals.defaultAppTimeout).toEqual(20000);
+    });
+
+    it('can assign a number', () => {
+      bigtestGlobals.defaultAppTimeout = 3000;
+      expect(bigtestGlobals.defaultAppTimeout).toEqual(3000);
+    });
+  });
+
   describe('testFrame', () => {
     it('returns undefined if there is not test frame', () => {
       expect(bigtestGlobals.testFrame).toEqual(undefined);
@@ -88,6 +99,17 @@ describe('@bigtest/globals', () => {
       let frameElement = myDocument.querySelector('iframe') as HTMLIFrameElement;
       bigtestGlobals.testFrame = frameElement;
       expect(bigtestGlobals.testFrame).toEqual(frameElement);
+    });
+  });
+
+  describe('runnerState', () => {
+    it('returns undefined by default', () => {
+      expect(bigtestGlobals.runnerState).toEqual(undefined);
+    });
+
+    it('can assign a runner state', () => {
+      bigtestGlobals.runnerState = 'step';
+      expect(bigtestGlobals.runnerState).toEqual('step');
     });
   });
 })

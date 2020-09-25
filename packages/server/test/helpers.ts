@@ -10,10 +10,11 @@ import { World } from './helpers/world';
 import { createOrchestrator } from '../src/index';
 import { createOrchestratorAtom } from '../src/orchestrator/atom';
 import { AppOptions } from '../src/orchestrator/state';
-import { Manifest } from '../src/orchestrator/state';
+import { Manifest, BundlerState } from '../src/orchestrator/state';
 
 let orchestratorPromise: Context;
 let manifest: Manifest;
+let bundler: BundlerState = { type: 'UNBUNDLED' };
 
 export const actions = {
   atom: createOrchestratorAtom({
@@ -66,6 +67,7 @@ export const actions = {
           port: 24102,
           testFiles: ["test/fixtures/*.t.js"],
           cacheDir: "./tmp/test/orchestrator",
+          watchTestFiles: true,
           manifest: {
             port: 24105,
           },
@@ -84,6 +86,7 @@ export const actions = {
     }
     return orchestratorPromise.then(cxt => {
       manifest = actions.atom.get().manifest;
+      bundler = actions.atom.get().bundler;
       return cxt;
     });
   }
@@ -97,7 +100,7 @@ after(async function() {
 });
 
 beforeEach(() => {
-  actions.atom.reset(initial => ({ ...initial, manifest }));
+  actions.atom.reset(initial => ({ ...initial, manifest, bundler }));
 
   currentWorld = new World();
 });

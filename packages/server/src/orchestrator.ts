@@ -94,6 +94,7 @@ export function* createOrchestrator(options: OrchestratorOptions): Operation {
   console.debug('[orchestrator] manifest generator ready');
 
   yield fork(createManifestBuilder({
+    watch: options.project.watchTestFiles,
     atom: options.atom,
     srcPath: manifestSrcPath,
     distDir: manifestDistDir,
@@ -122,7 +123,7 @@ export function* createOrchestrator(options: OrchestratorOptions): Operation {
       console.debug('[orchestrator] app server ready');
     });
     yield fork(function* () {
-      yield options.atom.slice('bundler').once(({ type }) => type === 'GREEN');
+      yield options.atom.slice('bundler').once(({ type }) => type === 'GREEN' || type === 'ERRORED');
       console.debug('[orchestrator] manifest builder ready');
     });
     yield fork(function* () {
@@ -160,6 +161,7 @@ export function* createOrchestrator(options: OrchestratorOptions): Operation {
       events: commandProcessorEvents,
       commands: commandProcessorCommands,
       delegate: connectionServerInbox,
+      testFiles: options.project.testFiles,
     });
   } finally {
     console.log("[orchestrator] shutting down!");

@@ -105,14 +105,20 @@ export function standardFooter() {
       console.log(chalk.grey('────────────────────────────────────────────────────────────────────────────────'));
       console.log(`${agent.agentId}`);
       console.log(`Steps:      ${formatCounts(summary.stepCounts)}`);
-      console.log(`Assertions: ${formatCounts(summary.stepCounts)}`);
+      console.log(`Assertions: ${formatCounts(summary.assertionCounts)}`);
 
       if(result.status !== 'ok') {
         console.log('');
         recursiveChildrenResults(result);
       }
     });
-    console.log(chalk.grey('────────────────────────────────────────────────────────────────────────────────'));
+    if(testRun.agents.length) {
+      console.log(chalk.grey('────────────────────────────────────────────────────────────────────────────────'));
+    }
+    if(testRun.status === 'failed' && testRun.error) {
+      errorLines(testRun.error).forEach((line) => console.log(chalk.red(line)));
+      console.log('');
+    }
     console.log(
       testRun.status === 'ok'
         ? chalk.green('✓ SUCCESS')
@@ -126,3 +132,5 @@ export type Formatter = {
   event(event: RunResultEvent): void;
   footer(result: TestResults): void;
 };
+
+export type FormatterConstructor = () => Formatter;
