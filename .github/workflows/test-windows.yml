@@ -1,4 +1,4 @@
-name: Test Mac
+name: Test Windows
 
 on:
   pull_request:
