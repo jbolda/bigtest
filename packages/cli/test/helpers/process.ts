@@ -42,6 +42,17 @@ export class Process {
     return 'child is dead already'
   }
 
+  *close(t = 2000): Operation<void> {
+    this.term();
+    yield spawn(function*(): Operation<void> {
+      yield timeout(t);
+      throw new Error("unable to shut down child process cleanly");
+    });
+
+    yield this.join();
+
+  }
+
   *run(): Operation<void> {
     yield ensure(() => this.term());
     this.child = ChildProcess.spawnProcess(this.command, this.args);
