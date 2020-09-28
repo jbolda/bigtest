@@ -55,7 +55,7 @@ export class Process {
 
   *run(): Operation<void> {
     yield ensure(() => this.term());
-    this.child = ChildProcess.spawnProcess(this.command, this.args);
+    this.child = ChildProcess.spawnProcess(this.command, this.args, {cwd: __dirname});
 
     if (this.child?.stdout) {
       this.stdout = yield Stream.of(this.child.stdout, this.options.verbose);
