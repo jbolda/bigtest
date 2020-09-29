@@ -69,10 +69,6 @@ describe('manifest builder', () => {
 
       let bundle = await actions.fork(atom.slice('bundler').once(({ type }) => type === 'GREEN'));
 
-      let bundle = await actions.fork(
-        atom.slice("bundler").once(({ type }) => type === "GREEN")
-      );
-
       resultPath = (!!bundle &&
         bundle.type === "GREEN" &&
         bundle.path) as string;
