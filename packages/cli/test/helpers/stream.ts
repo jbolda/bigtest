@@ -29,6 +29,9 @@ export class Stream {
 
   *waitFor(text: string) {
     let subscription = yield subscribe(this.semaphore);
+    // TODO fix error swallowing
+    // this wait for a specific set of text, and if it throws ts errors
+    // then the test just times out and it is hard to track down the real issue
     while(!this.output.includes(text)) {
       yield subscription.next();
     }
