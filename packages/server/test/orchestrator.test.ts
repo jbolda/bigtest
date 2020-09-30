@@ -134,8 +134,12 @@ describe('orchestrator', () => {
         })
       );
 
-      await actions.fork(function * () {
-        return yield ChildProcess.spawn('yarn', ['run', 'test:app:start', `${port}`]);
+      await actions.fork(function*() {
+        return yield ChildProcess.spawn(
+          "yarn",
+          ["run", "test:app:start", `${port}`],
+          { cwd: __dirname }
+        );
       });
 
       await actions.fork(
