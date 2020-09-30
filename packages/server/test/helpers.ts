@@ -20,7 +20,7 @@ export const actions = {
   atom: createOrchestratorAtom({
     app: {
       url: "http://localhost:24100",
-      command: "yarn test:app:start 24100",
+      command: "yarn ts-node ./bin/todomvc.ts 24100",
     },
   }),
 
