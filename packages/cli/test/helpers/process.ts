@@ -12,6 +12,7 @@ interface ProcessOptions {
 export class Process {
   public stdout?: Stream;
   public stderr?: Stream;
+  public stdin?: ChildProcess.ChildProcess['stdin'];
   private child?: ChildProcess.ChildProcess;
   private exited = Deferred<[number,number]>();
 
@@ -62,6 +63,9 @@ export class Process {
     }
     if (this.child?.stderr) {
       this.stderr = yield Stream.of(this.child.stderr, this.options.verbose);
+    }
+    if (this.child.stdin) {
+      this.stdin = this.child.stdin;
     }
 
     let {exitCode, signal} = yield once(this.child, 'exit');
