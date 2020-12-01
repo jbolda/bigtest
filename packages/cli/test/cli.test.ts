@@ -31,7 +31,7 @@ async function run(...args: string[]): Promise<TestProcess> {
 }
 
 describe('@bigtest/cli', function() {
-  this.timeout(process.env.CI ? 120000 : 30000);
+  this.timeout(process.env.CI ? 130000 : 30000);
 
   describe('start', () => {
     describe('starting the server', () => {
