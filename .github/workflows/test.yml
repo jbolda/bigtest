@@ -21,9 +21,9 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: '**/node_modules/'
-          key: cachekey-v2-${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          key: cachekey-v3-${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            cachekey-v2-${{ runner.os }}-yarn-
+            cachekey-v3-${{ runner.os }}-yarn-
       - name: Install dependencies
         run: yarn
       - name: Run prepack
@@ -49,9 +49,9 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: '**/node_modules/'
-          key: cachekey-v2-${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          key: cachekey-v3-${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
           restore-keys: |
-            cachekey-v2-${{ runner.os }}-yarn-
+            cachekey-v3-${{ runner.os }}-yarn-
       - uses: actions/download-artifact@v2
         # this action will also unpack them for us
         with:
